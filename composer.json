@@ -1,5 +1,5 @@
 {
-    "name": "darxide-pl/Filter",
+    "name": "darxide-pl/cakephp-filter",
     "description": "Filtering Queries plugin with extended FormHelper for CakePHP",
     "type": "cakephp-plugin",
     "license": "MIT",
