@@ -76,7 +76,7 @@ use Cake\ORM\Query;
 class UsersFilter extends BaseFilter
 {
 	/**
-	* Used filter methods should be listed in this property
+	* ! Used filter methods should be listed in this property - without this - filter will not be executed
 	* @var  array
 	*/
 	protected $filters = [
@@ -85,9 +85,14 @@ class UsersFilter extends BaseFilter
 	];
 
 	/**
-	* Filter results by user name
 	* By default, filter will look for variable $_GET[filter][name] or $_POST[filter][name] in this case
 	* @see Filter\Engine\RequestEngine::get() 
+	*
+	*  
+	* Notice: filter will be executed only if value is not "falsy": 
+	*  - not 0, 
+	*  - not empty string, 
+	*  - not null, etc
 	* 
 	* @return Query
 	*/
@@ -148,5 +153,116 @@ class PagesController extends AppController
 <?php dump($results->toArray()) ?>
 ```
 
-### Docs 
-Today is 18.03.2019 and I promise I will complete docs asap.
+## Docs 
+
+### 1. Use cases 
+
+#### 1.1 Filtering same query for different user types 
+Sometimes we need to disable some fields in filters for different user types. 
+
+We can realize that in many ways, and we should consider some possibilities. 
+
+We can create separated filter classes for each type of users if filter is complicated and differences between forms for user and admin are huge:
+`/src/Model/Filter/Users/AdminsFilter.php`
+`/src/Model/Filter/Users/CustomersFilter.php`
+
+Then in controller we can bind expected filter to query as in a quick example. 
+
+Notice: 
+Two lines above, we moved filter class one level deeper into a folder tree. 
+The only one difference is argument passed to create FormFilter which should look like this:
+```php
+<?= $this->FilterForm->create('Users.Customers') ?>
+```
+or
+```php
+<?= $this->FilterForm->create('Users.Admins') ?>
+```
+
+
+If difference between user types is small, You can use Session inside filter: 
+In our `/src/Model/Filter/UsersFilter.php` :
+
+```php
+<?php
+
+namespace App\Model\Filter;
+use Filter\Filter\BaseFilter;
+use Cake\ORM\Query;
+
+class UsersFilter extends BaseFilter
+{
+	protected $filters = ['name'];
+	
+	public  function name(Query $query, string $value) :Query
+	{
+		if($this->getSession()->read('Auth.User.role') !==  'admin') {
+			return $query;
+		}
+
+		return $query
+			->where([
+				'Users.name LIKE'  =>  '%'  . $value .  '%'
+			]);
+	}
+}
+```
+
+#### 1.2 Get value of one filter method inside another
+We can simple realize that by using getter: `FilterInterface::get(string $name)`
+
+```php
+<?php
+
+namespace App\Model\Filter;
+use Filter\Filter\BaseFilter;
+use Cake\ORM\Query;
+
+class UsersFilter extends BaseFilter
+{
+	protected $filters = ['name','lastname'];
+	
+	public  function name(Query $query, string $value) :Query
+	{
+		// we can access value of get.filter.lastname|post.filter.lastname here
+		$lastname = $this->get('lastname');
+		
+		return $query
+			->where([
+				'Users.name LIKE'  =>  '%'  . $value .  '%',
+				'Users.lastname LIKE' => '%' . $value . '%'
+			]);
+	}
+	
+	public function lastname (Query $query, string $value) :Query {}
+}
+```
+#### 1.3 Access to database inside filter
+I think we should avoid that operation, but it happens. Sometimes before filtering we need to fetch some data from database only for preparing the final filtered query.
+
+
+```php
+<?php
+
+namespace App\Model\Filter;
+use Filter\Filter\BaseFilter;
+use Cake\ORM\Query;
+
+class UsersFilter extends BaseFilter
+{
+	protected $filters = ['name'];
+	
+	public  function name(Query $query, string $value) :Query
+	{
+		// We can load model like in controller 
+		$this->loadModel('Roles');
+		$roles = $this->Users->find('list')->toArray();
+		
+		return $query
+			->where([
+				'Users.name LIKE'  =>  '%'  . $value .  '%',
+				'Users.role_id IN' => $roles
+			]);
+	}
+}
+```
