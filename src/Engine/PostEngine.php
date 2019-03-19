@@ -13,6 +13,6 @@ class PostEngine extends BaseEngine
      */
     public function get(string $key) 
     {
-        return Router::getRequest()->getData('filter.'.$key);
+        return $this->getRequest()->getData('filter.'.$key);
     }
 }

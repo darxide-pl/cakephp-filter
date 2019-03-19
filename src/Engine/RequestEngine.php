@@ -15,10 +15,10 @@ class RequestEngine extends BaseEngine
      */
     public function get(string $key) 
     {
-        if($value = Router::getRequest()->getQuery('filter.'.$key)) {
+        if($value = $this->getRequest()->getQuery('filter.'.$key)) {
             return $value;
         }
 
-        return Router::getRequest()->getData('filter.'.$key);
+        return $this->getRequest()->getData('filter.'.$key);
     }
 }

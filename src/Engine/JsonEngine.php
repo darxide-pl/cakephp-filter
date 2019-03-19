@@ -17,7 +17,7 @@ class JsonEngine extends BaseEngine
      */
     public function get(string $key) 
     {
-        $data = Router::getRequest()->input('json_decode');
+        $data = $this->getRequest()->input('json_decode');
         return Hash::get($data, 'filter.'.$key);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Filter\Engine; 
 use Filter\Storage\FilterStorageInterface;
+use Cake\Http\ServerRequest;
 
 interface FilterEngineInterface {
 
@@ -18,4 +19,17 @@ interface FilterEngineInterface {
      * 	@return mixed
      */
     public function get(string $key);
+
+    /**
+     *  Get request 
+     *  @return ServerRequest
+     */
+    public function getRequest() :ServerRequest;
+
+    /**
+     *  Set request 
+     *  @param ServerRequest 
+     *  @return ServerRequest
+     */
+    public function setRequest(ServerRequest $request) :ServerRequest;
 }

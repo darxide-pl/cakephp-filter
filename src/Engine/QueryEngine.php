@@ -13,6 +13,6 @@ class QueryEngine extends BaseEngine
      */
     public function get(string $key) 
     {
-        return Router::getRequest()->getQuery('filter.'.$key);
+        return $this->getRequest()->getQuery('filter.'.$key);
     }
 }
