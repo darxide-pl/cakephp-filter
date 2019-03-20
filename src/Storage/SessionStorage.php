@@ -42,7 +42,6 @@ class SessionStorage extends BaseStorage
     public function delete(string $key) :bool 
     {
         $key = $this->normalizeKey($key);
-        dump($key);
         return !!Router::getRequest()
             ->getSession()
             ->delete($key);

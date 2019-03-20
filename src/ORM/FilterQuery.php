@@ -53,7 +53,19 @@ class FilterQuery extends Query {
     public function setFilterClass(string $classname) :FilterQuery
     {
         $this->filter = new $classname();
+        if(!$this->filter instanceof FilterInterface) {
+            throw new \RuntimeException(__('Filter should implement FilterInterface'));
+        }
         return $this;
+    }
+
+    /**
+     *  Get instance of current filter or null if filter was not set
+     *  @return FilterInterface|null
+     */
+    public function getFilter() 
+    {
+        return $this->filter;
     }
 
     /**
@@ -67,23 +79,21 @@ class FilterQuery extends Query {
             return parent::all();
         }
 
-        $classname = $this->filter; 
-        $filter = new $classname();
-        $filter->initialize();
+        $this->filter->initialize();
 
-        foreach ($filter->getFilters() as $name) {
+        foreach ($this->filter->getFilters() as $name) {
 
             if(isset($this->disabled[$name])) {
                 continue;
             }
 
-            if($value = $filter->get($name)) {
-                $filter->{$name}($this, $value);
+            if($value = $this->filter->get($name)) {
+                $this->filter->{$name}($this, $value);
             }
 
-            if($filter->getStorage()) {
-                $key = get_class($filter).'__'.$name;
-                $filter
+            if($this->filter->getStorage()) {
+                $key = get_class($this->filter).'__'.$name;
+                $this->filter
                     ->getStorage()
                     ->write($key, $value);
             }
